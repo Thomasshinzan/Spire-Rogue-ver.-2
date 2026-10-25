@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spire Rogue</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="data.js"></script>
+  <script src="models.js"></script>
+  <script src="deck.js"></script>
+  <script src="combat_ui.js"></script>
+  <script src="combat.js"></script>
+  <script src="dungeon.js"></script>
+  <script src="main.js"></script>
+</head>
+<body>
+  <div id="game-container">
+    
+    <!-- タイトル(ホーム)シーン -->
+    <div id="scene-title" class="scene">
+      <div class="title-content">
+        <h1>Spire Rogue</h1>
+        <!-- セーブスロット画面へ遷移するボタンに統一 -->
+        <button id="nav-start-game-btn" class="main-btn" style="background-color: #ffaa55; color: #222; margin-bottom: 20px;">ゲームスタート</button>
+      </div>
+    </div>
+
+    <!-- ★追加: セーブスロット選択シーン -->
+    <div id="scene-save-slots" class="scene hidden">
+      <div class="title-content">
+        <h2 style="color: #ffcc55; margin-bottom: 30px;">セーブデータ選択</h2>
+        <div id="save-slots-container" style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+          <!-- スロットが動的に生成されます -->
+        </div>
+        <button id="back-to-title-from-slots-btn" class="sub-btn">戻る</button>
+      </div>
+    </div>
+
+    <!-- ★追加: 章選択シーン -->
+    <div id="scene-chapter-select" class="scene hidden">
+      <div class="title-content">
+        <h2 style="color: #44aa44; margin-bottom: 30px;">開始する章を選択</h2>
+        <div id="chapter-select-container" style="width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; overflow-y: auto; flex-grow: 1;">
+          <!-- 章ボタンが動的に生成されます -->
+        </div>
+        <button id="back-to-slots-from-chapter-btn" class="sub-btn">戻る</button>
+      </div>
+    </div>
+
+    <!-- デッキ管理(ハブ)シーン -->
+    <div id="scene-deck-hub" class="scene hidden">
+      <div class="title-content">
+        <h2 style="color: #55aaff; margin-bottom: 40px; font-size: 2.2em;">デッキ管理</h2>
+        <button id="nav-starter-deck-btn" class="main-btn" style="background-color: #4466aa;">現在のデッキ</button>
+        <button id="nav-card-pool-btn" class="main-btn" style="background-color: #44aa44;">カード一覧</button>
+        <button id="back-to-title-from-hub-btn" class="sub-btn">戻る</button>
+      </div>
+    </div>
+
+    <!-- 現在のデッキシーン -->
+    <div id="scene-starter-deck" class="scene hidden">
+      <div class="deck-build-content">
+        <h2 style="color: #4466aa;">現在のデッキ</h2>
+        <div class="deck-split-container">
+          <div class="deck-section">
+            <p class="section-title">総数: <span id="deck-count">0</span> 枚</p>
+            <div id="deck-list" class="card-list-container"></div>
+          </div>
+        </div>
+        <button id="back-to-hub-from-deck-btn" class="sub-btn">戻る</button>
+      </div>
+    </div>
+
+    <!-- カード図鑑(プール)シーン -->
+    <div id="scene-card-pool" class="scene hidden">
+      <div class="deck-build-content">
+        <h2 style="color: #44aa44;">カード一覧</h2>
+        <div class="deck-split-container">
+          <div class="deck-section">
+            <p class="section-title">全カード（タップで追加）</p>
+            <div id="pool-list" class="card-list-container"></div>
+          </div>
+        </div>
+        <button id="back-to-hub-from-pool-btn" class="sub-btn">戻る</button>
+      </div>
+    </div>
+
+    <!-- マップシーン -->
+    <div id="scene-map" class="scene hidden">
+      <div class="map-content">
+        <h2>次の行き先</h2>
+        <p id="map-info">第1階層</p>
+        <p id="map-desc" style="margin-bottom: 24px; color: #aaa;"></p>
+        <button id="map-proceed-btn" class="main-btn">進む</button>
+      </div>
+    </div>
+
+    <!-- キャンプシーン -->
+    <div id="scene-camp" class="scene hidden">
+      <div class="map-content">
+        <h2>キャンプ地</h2>
+        <p>静かな焚き火の暖かさが身体を癒やしてくれます。</p>
+        <button id="camp-deck-btn" class="main-btn" style="background-color: #5577bb; margin-bottom: 12px;">デッキ編成</button>
+        <button id="camp-artifact-btn" class="main-btn" style="background-color: #aa7755; margin-bottom: 24px;">遺物（アーティファクト）</button>
+        <p style="color: #ffcc55; margin-bottom: 24px;">最大HPの30%を回復します。</p>
+        <button id="camp-rest-btn" class="main-btn" style="background-color: #ffaa55; color: #222;">休む</button>
+      </div>
+    </div>
+
+    <!-- イベントシーン -->
+    <div id="scene-event" class="scene hidden">
+      <div class="map-content">
+        <h2 id="event-title" style="color: #55aaff;">イベント</h2>
+        <p id="event-desc" style="margin-bottom: 30px;">イベントの説明がここに入ります。</p>
+        <button id="event-action-btn" class="main-btn">アクション</button>
+        <button id="event-leave-btn" class="sub-btn">立ち去る</button>
+      </div>
+    </div>
+
+    <!-- 戦闘シーン -->
+    <div id="scene-combat" class="scene hidden" style="height: 100%; display: flex; flex-direction: column;">
+      <header id="header"></header>
+      <section id="enemy-area"></section>
+      <section id="message-log"></section>
+      <footer id="footer"></footer>
+      <section id="player-area"></section>
+      <section id="hand-area"></section>
+    </div>
+
+    <!-- 報酬シーン -->
+    <div id="scene-reward" class="scene hidden">
+      <div class="reward-content">
+        <h2>戦闘勝利！</h2>
+        <p>デッキに追加するカードを1枚選んでください。</p>
+        <div id="reward-cards" class="reward-grid"></div>
+        <button id="skip-reward-btn" class="sub-btn">スキップする</button>
+      </div>
+    </div>
+
+    <!-- アーティファクト報酬シーン -->
+    <div id="scene-artifact-reward" class="scene hidden">
+      <div class="reward-content">
+        <h2 style="color: #ffaa55;">塔の主を討ち果たした！</h2>
+        <p>戦利品としてアーティファクトを1つ選び、拠点へ帰還します。</p>
+        <div id="artifact-cards" class="reward-grid"></div>
+      </div>
+    </div>
+
+    <!-- アーティファクト管理シーン -->
+    <div id="scene-artifacts" class="scene hidden">
+      <div class="deck-build-content">
+        <h2 style="color: #ffaa55;">アーティファクト</h2>
+        <div class="deck-split-container">
+          <div class="deck-section">
+            <p class="section-title">所持品</p>
+            <div id="artifact-list" class="card-list-container"></div>
+          </div>
+          <div class="deck-section">
+            <p class="section-title">詳細</p>
+            <div id="artifact-detail" style="padding: 10px; text-align: left; overflow-y: auto; flex-grow:1;">
+              <p style="color:#aaa;">リストから選択してください</p>
+            </div>
+          </div>
+        </div>
+        <button id="back-to-combat-from-artifacts-btn" class="sub-btn">戦闘へ戻る</button>
+      </div>
+    </div>
+
+    <!-- リザルトモーダル -->
+    <div id="result-modal" class="hidden">
+      <div id="result-content">
+        <h1 id="result-title"></h1>
+        <p id="result-message"></p>
+        <button id="restart-btn">タイトルへ戻る</button>
+      </div>
+    </div>
+
+    <!-- カスタムダイアログ -->
+    <div id="custom-dialog" class="hidden">
+      <div id="dialog-content">
+        <p id="dialog-message"></p>
+        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
+          <button id="dialog-ok-btn" class="main-btn" style="margin: 0; padding: 10px 20px; width: 100px;">OK</button>
+          <button id="dialog-cancel-btn" class="sub-btn hidden" style="margin: 0; padding: 10px 20px; width: 120px;">キャンセル</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
